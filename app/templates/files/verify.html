@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block title %}File Verification - EHR Blockchain System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>File Verification
+                </h2>
+                <div>
+                    <a href="{{ url_for('files.upload_form') }}" class="btn btn-primary me-2">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>Upload Files
+                    </a>
+                    <a href="{{ url_for('files.tamper_demo') }}" class="btn btn-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Tamper Demo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Verification Form -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-search me-2"></i>Verify File Integrity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="verifyForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="file_select" class="form-label">Select Uploaded File to Verify</label>
+                            <select class="form-select" id="file_select" name="file_hash" required>
+                                <option value="">Choose a file from uploaded files...</option>
+                                {% if uploaded_files %}
+                                    {% for file in uploaded_files %}
+                                        <option value="{{ file.file_hash }}" 
+                                                data-filename="{{ file.filename }}"
+                                                data-hash="{{ file.file_hash }}">
+                                            {{ file.filename }} ({{ file.file_hash[:16] }}...)
+                                        </option>
+                                    {% endfor %}
+                                {% endif %}
+                            </select>
+                            <div class="form-text">
+                                Select a file that was previously uploaded to verify its integrity
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="file" class="form-label">Upload Current File Version</label>
+                            <input type="file" class="form-control" id="file" name="file" required>
+                            <div class="form-text">
+                                Upload the current version of the file you want to verify
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="stored_hash" class="form-label">Stored Hash (from Blockchain)</label>
+                            <input type="text" class="form-control" id="stored_hash" name="stored_hash" 
+                                   placeholder="Hash will be auto-filled when you select a file" readonly>
+                            <div class="form-text">
+                                This is the hash that was stored when the file was originally uploaded
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-info" id="verifyBtn">
+                                <i class="fas fa-shield-alt me-2"></i>Verify File Integrity
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verification Results -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clipboard-check me-2"></i>Verification Results
+                    </h5>
+                </div>
+                <div class="card-body" id="verificationResults">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-search fa-3x mb-3"></i>
+                        <p>Upload a file and provide its stored hash to verify integrity</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>How File Verification Works
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="verification-step">
+                                <div class="step-icon bg-primary text-white rounded-circle mx-auto mb-3">
+                                    <i class="fas fa-file-upload fa-2x"></i>
+                                </div>
+                                <h6>1. File Upload</h6>
+                                <p class="text-muted">Original file is uploaded and hashed</p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="verification-step">
+                                <div class="step-icon bg-success text-white rounded-circle mx-auto mb-3">
+                                    <i class="fas fa-link fa-2x"></i>
+                                </div>
+                                <h6>2. Blockchain Storage</h6>
+                                <p class="text-muted">Hash is stored on Ethereum blockchain</p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="verification-step">
+                                <div class="step-icon bg-warning text-white rounded-circle mx-auto mb-3">
+                                    <i class="fas fa-shield-alt fa-2x"></i>
+                                </div>
+                                <h6>3. Hash Comparison</h6>
+                                <p class="text-muted">Current file hash vs stored hash</p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="verification-step">
+                                <div class="step-icon bg-info text-white rounded-circle mx-auto mb-3">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                                <h6>4. Integrity Check</h6>
+                                <p class="text-muted">Verification result is displayed</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Benefits -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lock me-2"></i>Security Benefits
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="security-benefit">
+                                <h6><i class="fas fa-shield-alt text-success me-2"></i>Tamper Detection</h6>
+                                <p class="text-muted">Any modification to the file will change its hash, immediately detecting tampering.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="security-benefit">
+                                <h6><i class="fas fa-link text-primary me-2"></i>Blockchain Immutability</h6>
+                                <p class="text-muted">Once stored on blockchain, the hash cannot be altered, ensuring permanent record.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="security-benefit">
+                                <h6><i class="fas fa-history text-info me-2"></i>Audit Trail</h6>
+                                <p class="text-muted">Complete history of file uploads and verifications is maintained on blockchain.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.step-icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.verification-step h6 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.security-benefit h6 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+</style>
+
+<script>
+// Auto-fill stored hash when file is selected
+document.getElementById('file_select').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const storedHashInput = document.getElementById('stored_hash');
+    
+    if (this.value) {
+        const fileHash = selectedOption.getAttribute('data-hash');
+        const fileName = selectedOption.getAttribute('data-filename');
+        storedHashInput.value = fileHash;
+        
+        // Show selected file info
+        showSelectedFileInfo(fileName, fileHash);
+    } else {
+        storedHashInput.value = '';
+        hideSelectedFileInfo();
+    }
+});
+
+function showSelectedFileInfo(fileName, fileHash) {
+    let infoDiv = document.getElementById('selectedFileInfo');
+    if (!infoDiv) {
+        infoDiv = document.createElement('div');
+        infoDiv.id = 'selectedFileInfo';
+        infoDiv.className = 'alert alert-info mt-3';
+        document.getElementById('file_select').parentNode.appendChild(infoDiv);
+    }
+    
+    infoDiv.innerHTML = `
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Selected File:</strong> ${fileName}<br>
+        <strong>Stored Hash:</strong> <code>${fileHash}</code>
+        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyToClipboard('${fileHash}')" title="Copy hash">
+            <i class="fas fa-copy"></i>
+        </button>
+    `;
+}
+
+function hideSelectedFileInfo() {
+    const infoDiv = document.getElementById('selectedFileInfo');
+    if (infoDiv) {
+        infoDiv.remove();
+    }
+}
+
+function copyToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Hash copied to clipboard!', 'success');
+        }).catch(() => {
+            fallbackCopyToClipboard(text);
+        });
+    } else {
+        fallbackCopyToClipboard(text);
+    }
+}
+
+function fallbackCopyToClipboard(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-999999px';
+    textarea.style.top = '-999999px';
+    document.body.appendChild(textarea);
+    
+    textarea.focus();
+    textarea.select();
+    
+    try {
+        document.execCommand('copy');
+        showToast('Hash copied to clipboard!', 'success');
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+        showToast('Failed to copy hash', 'error');
+    }
+    
+    document.body.removeChild(textarea);
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 3000);
+}
+
+document.getElementById('verifyForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const verifyBtn = document.getElementById('verifyBtn');
+    const resultsDiv = document.getElementById('verificationResults');
+    
+    // Show loading
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Verifying...';
+    
+    // Send verification request
+    fetch('/files/verify', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Display results
+        if (data.is_valid) {
+            resultsDiv.innerHTML = `
+                <div class="text-center text-success">
+                    <i class="fas fa-check-circle fa-3x mb-3"></i>
+                    <h4>File Integrity Verified!</h4>
+                    <p class="mb-3">The file has not been tampered with.</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Current Hash:</strong><br>
+                            <code class="small">${data.current_hash}</code>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Stored Hash:</strong><br>
+                            <code class="small">${data.stored_hash}</code>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            resultsDiv.innerHTML = `
+                <div class="text-center text-danger">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                    <h4>File Tampering Detected!</h4>
+                    <p class="mb-3">The file has been modified since it was uploaded.</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Current Hash:</strong><br>
+                            <code class="small">${data.current_hash}</code>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Stored Hash:</strong><br>
+                            <code class="small">${data.stored_hash}</code>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This file may have been compromised.
+                    </div>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        resultsDiv.innerHTML = `
+            <div class="text-center text-danger">
+                <i class="fas fa-times-circle fa-3x mb-3"></i>
+                <h4>Verification Failed</h4>
+                <p>Error: ${error.message}</p>
+            </div>
+        `;
+    })
+    .finally(() => {
+        verifyBtn.disabled = false;
+        verifyBtn.innerHTML = '<i class="fas fa-shield-alt me-2"></i>Verify File Integrity';
+    });
+});
+</script>
+{% endblock %} 

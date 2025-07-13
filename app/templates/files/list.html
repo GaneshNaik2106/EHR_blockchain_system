@@ -1,0 +1,478 @@
+{% extends "base.html" %}
+
+{% block title %}File List - EHR Blockchain System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-file-alt me-2"></i>Uploaded Files
+                </h2>
+                <div>
+                    <a href="{{ url_for('files.upload_form') }}" class="btn btn-primary me-2">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>Upload New File
+                    </a>
+                    <a href="{{ url_for('files.verify_page') }}" class="btn btn-success me-2">
+                        <i class="fas fa-shield-alt me-2"></i>Verify Files
+                    </a>
+                    <a href="{{ url_for('files.tamper_demo') }}" class="btn btn-warning me-2">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Tamper Demo
+                    </a>
+                    <a href="{{ url_for('files.statistics') }}" class="btn btn-info">
+                        <i class="fas fa-chart-bar me-2"></i>Statistics
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if files %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>File Registry
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Filename</th>
+                                        <th>File Hash</th>
+                                        <th>Record Type</th>
+                                        <th>Status</th>
+                                        <th>Verifications</th>
+                                        <th>Upload Time</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for file in files %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ file.filename }}</strong>
+                                            {% if file.ipfs_hash %}
+                                                <br><small class="text-muted">IPFS: {{ file.ipfs_hash[:16] }}...</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <code class="text-primary me-2" style="font-size: 0.85em;">{{ file.file_hash[:16] }}...</code>
+                                                <button class="btn btn-sm btn-outline-secondary" 
+                                                        onclick="copyToClipboard('{{ file.file_hash }}')"
+                                                        title="Copy full hash">
+                                                    <i class="fas fa-copy"></i>
+                                                </button>
+                                            </div>
+                                            <small class="text-muted d-block mt-1">
+                                                <span class="full-hash" style="display: none;">{{ file.file_hash }}</span>
+                                                <button class="btn btn-sm btn-link p-0" onclick="toggleFullHash(this)">
+                                                    Show full hash
+                                                </button>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ file.record_type or 'medical_file' }}</span>
+                                        </td>
+                                        <td>
+                                            {% if file.is_valid %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Valid
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times me-1"></i>Invalid
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">
+                                                {{ file.verification_count or 0 }} verifications
+                                            </span>
+                                            {% if file.last_verified %}
+                                                <br><small class="text-muted">Last: {{ file.last_verified | datetime }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if file.upload_time %}
+                                                {{ file.upload_time | datetime }}
+                                            {% else %}
+                                                <span class="text-muted">Unknown</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('files.file_details', file_hash=file.file_hash) }}" 
+                                                   class="btn btn-sm btn-outline-primary" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ url_for('files.audit_trail', file_hash=file.file_hash) }}" 
+                                                   class="btn btn-sm btn-outline-info" title="Audit Trail">
+                                                    <i class="fas fa-history"></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-success" 
+                                                        onclick="verifyFile('{{ file.file_hash }}')" 
+                                                        title="Verify File">
+                                                    <i class="fas fa-shield-alt"></i>
+                                                </button>
+                                                {% if file.is_valid %}
+                                                    <button class="btn btn-sm btn-outline-warning" 
+                                                            onclick="detectTampering('{{ file.file_hash }}')" 
+                                                            title="Detect Tampering">
+                                                        <i class="fas fa-exclamation-triangle"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-file-upload fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No files uploaded yet</h4>
+                        <p class="text-muted">Start by uploading your first file to the blockchain</p>
+                        <a href="{{ url_for('files.upload_form') }}" class="btn btn-primary">
+                            <i class="fas fa-cloud-upload-alt me-2"></i>Upload First File
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- File Verification Modal -->
+<div class="modal fade" id="verifyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-shield-alt me-2"></i>Verify File Integrity
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="verifyForm" enctype="multipart/form-data">
+                    <input type="hidden" id="verifyFileHash" name="file_hash">
+                    <div class="mb-3">
+                        <label for="verifyFile" class="form-label">Select File to Verify</label>
+                        <input type="file" class="form-control" id="verifyFile" name="file" required>
+                        <div class="form-text">
+                            Upload the file you want to verify against the blockchain
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Selected File Hash:</strong> 
+                        <span id="selectedVerifyHash"></span>
+                        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyModalHash()" title="Copy hash">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </form>
+                <div id="verifyResult" class="mt-3" style="display: none;">
+                    <div class="alert" id="verifyAlert">
+                        <div id="verifyMessage"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="submitVerification()">
+                    <i class="fas fa-check me-2"></i>Verify File
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tamper Detection Modal -->
+<div class="modal fade" id="tamperModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Detect Tampering
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="tamperForm" enctype="multipart/form-data">
+                    <input type="hidden" id="tamperFileHash" name="file_hash">
+                    <div class="mb-3">
+                        <label for="tamperFile" class="form-label">Select File to Check</label>
+                        <input type="file" class="form-control" id="tamperFile" name="file" required>
+                        <div class="form-text">
+                            Upload the file you want to check for tampering
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Selected File Hash:</strong> 
+                        <span id="selectedTamperHash"></span>
+                        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyModalTamperHash()" title="Copy hash">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </form>
+                <div id="tamperResult" class="mt-3" style="display: none;">
+                    <div class="alert" id="tamperAlert">
+                        <div id="tamperMessage"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning" onclick="submitTamperDetection()">
+                    <i class="fas fa-search me-2"></i>Detect Tampering
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    // Use modern clipboard API if available
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+            showCopySuccess();
+        }).catch(() => {
+            // Fallback to old method
+            fallbackCopyToClipboard(text);
+        });
+    } else {
+        // Fallback for older browsers
+        fallbackCopyToClipboard(text);
+    }
+}
+
+function fallbackCopyToClipboard(text) {
+    // Create a temporary textarea element
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-999999px';
+    textarea.style.top = '-999999px';
+    document.body.appendChild(textarea);
+    
+    // Select and copy the text
+    textarea.focus();
+    textarea.select();
+    
+    try {
+        document.execCommand('copy');
+        showCopySuccess();
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+        showToast('Failed to copy hash', 'error');
+    }
+    
+    // Remove the temporary element
+    document.body.removeChild(textarea);
+}
+
+function showCopySuccess() {
+    const button = event.target.closest('button');
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check"></i>';
+    button.classList.remove('btn-outline-secondary');
+    button.classList.add('btn-success');
+    
+    // Show a toast notification
+    showToast('Hash copied to clipboard!', 'success');
+    
+    setTimeout(() => {
+        button.innerHTML = originalHTML;
+        button.classList.remove('btn-success');
+        button.classList.add('btn-outline-secondary');
+    }, 1000);
+}
+
+function toggleFullHash(button) {
+    const hashSpan = button.parentElement.querySelector('.full-hash');
+    if (hashSpan.style.display === 'none') {
+        hashSpan.style.display = 'inline';
+        button.textContent = 'Hide full hash';
+    } else {
+        hashSpan.style.display = 'none';
+        button.textContent = 'Show full hash';
+    }
+}
+
+function copyModalHash() {
+    const hash = document.getElementById('selectedVerifyHash').textContent;
+    copyToClipboard(hash);
+}
+
+function copyModalTamperHash() {
+    const hash = document.getElementById('selectedTamperHash').textContent;
+    copyToClipboard(hash);
+}
+
+function showToast(message, type = 'info') {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 3000);
+}
+
+function verifyFile(fileHash) {
+    document.getElementById('verifyFileHash').value = fileHash;
+    document.getElementById('selectedVerifyHash').textContent = fileHash;
+    document.getElementById('verifyResult').style.display = 'none';
+    document.getElementById('verifyForm').reset();
+    new bootstrap.Modal(document.getElementById('verifyModal')).show();
+}
+
+function submitVerification() {
+    const formData = new FormData(document.getElementById('verifyForm'));
+    
+            fetch('{{ url_for("files.api_verify_file") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const resultDiv = document.getElementById('verifyResult');
+        const alertDiv = document.getElementById('verifyAlert');
+        const messageDiv = document.getElementById('verifyMessage');
+        
+        resultDiv.style.display = 'block';
+        
+        if (data.success && data.is_valid) {
+            alertDiv.className = 'alert alert-success';
+            messageDiv.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>File Verified Successfully!</strong><br>
+                The file integrity is confirmed. No tampering detected.
+            `;
+        } else if (data.success && !data.is_valid) {
+            alertDiv.className = 'alert alert-danger';
+            messageDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>File Verification Failed!</strong><br>
+                Possible tampering detected. The file hash does not match the original.
+            `;
+        } else {
+            alertDiv.className = 'alert alert-warning';
+            messageDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong>Verification Error:</strong><br>
+                ${data.error || 'Unknown error occurred'}
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        const resultDiv = document.getElementById('verifyResult');
+        const alertDiv = document.getElementById('verifyAlert');
+        const messageDiv = document.getElementById('verifyMessage');
+        
+        resultDiv.style.display = 'block';
+        alertDiv.className = 'alert alert-danger';
+        messageDiv.innerHTML = `
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <strong>Error:</strong><br>
+            Failed to verify file. Please try again.
+        `;
+    });
+}
+
+function detectTampering(fileHash) {
+    document.getElementById('tamperFileHash').value = fileHash;
+    document.getElementById('selectedTamperHash').textContent = fileHash;
+    document.getElementById('tamperResult').style.display = 'none';
+    document.getElementById('tamperForm').reset();
+    new bootstrap.Modal(document.getElementById('tamperModal')).show();
+}
+
+function submitTamperDetection() {
+    const formData = new FormData(document.getElementById('tamperForm'));
+    
+    fetch('{{ url_for("files.api_detect_tampering") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const resultDiv = document.getElementById('tamperResult');
+        const alertDiv = document.getElementById('tamperAlert');
+        const messageDiv = document.getElementById('tamperMessage');
+        
+        resultDiv.style.display = 'block';
+        
+        if (data.success) {
+            if (data.is_tampered) {
+                alertDiv.className = 'alert alert-danger';
+                messageDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Tampering Detected!</strong><br>
+                    The file has been modified since it was uploaded to the blockchain.<br>
+                    <small class="text-muted">
+                        Original Hash: ${data.original_hash}<br>
+                        Current Hash: ${data.current_hash}
+                    </small>
+                `;
+            } else {
+                alertDiv.className = 'alert alert-success';
+                messageDiv.innerHTML = `
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>No Tampering Detected</strong><br>
+                    The file appears to be unchanged since upload.
+                `;
+            }
+        } else {
+            alertDiv.className = 'alert alert-warning';
+            messageDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong>Detection Error:</strong><br>
+                ${data.error || 'Unknown error occurred'}
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        const resultDiv = document.getElementById('tamperResult');
+        const alertDiv = document.getElementById('tamperAlert');
+        const messageDiv = document.getElementById('tamperMessage');
+        
+        resultDiv.style.display = 'block';
+        alertDiv.className = 'alert alert-danger';
+        messageDiv.innerHTML = `
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <strong>Error:</strong><br>
+            Failed to detect tampering. Please try again.
+        `;
+    });
+}
+</script>
+{% endblock %} 

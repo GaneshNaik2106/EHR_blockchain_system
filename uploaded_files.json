@@ -1,0 +1,52 @@
+[
+  {
+    "file_hash": "60771aff8b83697a961484a0e1a9ef63ea84c0ffe3cd6aca71df540ba52b3849",
+    "filename": "test_upload.txt",
+    "ipfs_hash": "test_ipfs_hash",
+    "record_type": "medical_file",
+    "upload_time": 1752388494,
+    "is_valid": true,
+    "verification_count": 0,
+    "last_verified": 0
+  },
+  {
+    "file_hash": "076e1fb2b60608a0164782e736fa391d8fbe8799b79a80baa08f7f57c68e6567",
+    "filename": "lab_manual.pdf",
+    "ipfs_hash": "test_ipfs_hash",
+    "record_type": "medical_file",
+    "upload_time": 1752388607,
+    "is_valid": true,
+    "verification_count": 0,
+    "last_verified": 0
+  },
+  {
+    "file_hash": "0e43d156333567f78e66ace82427250fa397088be5db1be1d64035bef0b89b33",
+    "filename": "test_file_for_actions.txt",
+    "ipfs_hash": "test_ipfs_hash",
+    "record_type": "medical_file",
+    "upload_time": 1752388833,
+    "is_valid": true,
+    "verification_count": 0,
+    "last_verified": 0
+  },
+  {
+    "file_hash": "c927a39944d3fb95f1a5e4f06eb652b0f5ba260ecc98cb380a6c96cc046104eb",
+    "filename": "primality_v6.pdf",
+    "ipfs_hash": "test_ipfs_hash",
+    "record_type": "medical_file",
+    "upload_time": 1752390887,
+    "is_valid": true,
+    "verification_count": 0,
+    "last_verified": 0
+  },
+  {
+    "file_hash": "5123161b9035a74a6487c117b91e6ba352ddd3e79b574ae4116a4462512ae6de",
+    "filename": "eda_paper.pdf",
+    "ipfs_hash": "test_ipfs_hash",
+    "record_type": "medical_file",
+    "upload_time": 1752391151,
+    "is_valid": true,
+    "verification_count": 0,
+    "last_verified": 0
+  }
+]

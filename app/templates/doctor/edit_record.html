@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Medical Record{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.patients') }}">
+                            <i class="fas fa-users"></i> Patients
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.consultations') }}">
+                            <i class="fas fa-calendar-check"></i> Consultations
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.schedule') }}">
+                            <i class="fas fa-calendar-alt"></i> Schedule
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.profile') }}">
+                            <i class="fas fa-user-md"></i> Profile
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="fas fa-edit"></i> Edit Medical Record
+                </h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{{ url_for('doctor.view_patient', patient_id=record.patient_id) }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Patient
+                    </a>
+                </div>
+            </div>
+
+            <!-- Record Info Card -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle"></i> Record Information
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <p><strong>Patient:</strong> {{ record.patient.user.name }}</p>
+                                    <p><strong>Date Created:</strong> {{ record.date.strftime('%Y-%m-%d') }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><strong>Doctor:</strong> {{ record.doctor.user.name }}</p>
+                                    <p><strong>Last Updated:</strong> {{ record.updated_at.strftime('%Y-%m-%d %H:%M') if record.updated_at else 'Never' }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><strong>Record ID:</strong> #{{ record.id }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Medical Record Form -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-file-medical"></i> Medical Record Details
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="diagnosis" class="form-label">
+                                            <i class="fas fa-stethoscope"></i> Diagnosis *
+                                        </label>
+                                        <textarea class="form-control" id="diagnosis" name="diagnosis" rows="3" required 
+                                                  placeholder="Enter the patient's diagnosis...">{{ record.diagnosis or '' }}</textarea>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="treatment" class="form-label">
+                                            <i class="fas fa-pills"></i> Treatment *
+                                        </label>
+                                        <textarea class="form-control" id="treatment" name="treatment" rows="3" required
+                                                  placeholder="Enter the prescribed treatment...">{{ record.treatment or '' }}</textarea>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="prescription" class="form-label">
+                                            <i class="fas fa-prescription"></i> Prescription
+                                        </label>
+                                        <textarea class="form-control" id="prescription" name="prescription" rows="4"
+                                                  placeholder="Enter medication details, dosage, frequency...">{{ record.prescription or '' }}</textarea>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="notes" class="form-label">
+                                            <i class="fas fa-notes-medical"></i> Additional Notes
+                                        </label>
+                                        <textarea class="form-control" id="notes" name="notes" rows="4"
+                                                  placeholder="Enter any additional notes, observations, or recommendations...">{{ record.notes or '' }}</textarea>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            <strong>Warning:</strong> Editing this medical record will update the information permanently. 
+                                            Please ensure all changes are accurate and necessary.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between">
+                                            <a href="{{ url_for('doctor.view_patient', patient_id=record.patient_id) }}" class="btn btn-secondary">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </a>
+                                            <button type="submit" class="btn btn-warning">
+                                                <i class="fas fa-save"></i> Update Medical Record
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-resize textareas
+document.addEventListener('DOMContentLoaded', function() {
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+        
+        // Trigger resize on load to show full content
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+    });
+});
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const diagnosis = document.getElementById('diagnosis').value.trim();
+    const treatment = document.getElementById('treatment').value.trim();
+    
+    if (!diagnosis || !treatment) {
+        e.preventDefault();
+        alert('Please fill in all required fields (Diagnosis and Treatment).');
+        return false;
+    }
+    
+    // Confirm before updating
+    if (!confirm('Are you sure you want to update this medical record? This action cannot be undone.')) {
+        e.preventDefault();
+        return false;
+    }
+});
+</script>
+{% endblock %} 

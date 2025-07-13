@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Trail - EHR Blockchain System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Audit Trail
+                </h2>
+                <div>
+                    <a href="{{ url_for('files.file_details', file_hash=file_hash) }}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-file-alt me-2"></i>File Details
+                    </a>
+                    <a href="{{ url_for('files.file_list') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-list me-2"></i>Back to Files
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Information Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="mb-1">File Hash: <code>{{ file_hash }}</code></h5>
+                            <p class="text-muted mb-0">Complete audit trail of all operations performed on this file</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('{{ file_hash }}')">
+                                <i class="fas fa-copy me-1"></i>Copy Hash
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Trail -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Audit Entries
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if audit_entries %}
+                        <div class="timeline">
+                            {% for entry in audit_entries %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker {% if entry.action == 'UPLOAD' %}bg-success{% elif entry.action == 'VERIFY' %}bg-info{% elif entry.action == 'INVALIDATE' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                    <i class="fas fa-{% if entry.action == 'UPLOAD' %}upload{% elif entry.action == 'VERIFY' %}check{% elif entry.action == 'INVALIDATE' %}ban{% else %}circle{% endif %}"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">{{ entry.action|title }}</h6>
+                                            <p class="text-muted mb-1">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ entry.timestamp | datetime }}
+                                            </p>
+                                            <p class="mb-1">{{ entry.details }}</p>
+                                            <small class="text-muted">
+                                                <i class="fas fa-user me-1"></i>
+                                                Actor: <code>{{ entry.actor[:10] }}...</code>
+                                            </small>
+                                        </div>
+                                        <div class="text-end">
+                                            {% if entry.success %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Success
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times me-1"></i>Failed
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Audit Entries</h5>
+                            <p class="text-muted">No operations have been performed on this file yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    {% if audit_entries %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Audit Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h4 class="text-primary">{{ audit_entries|length }}</h4>
+                            <small class="text-muted">Total Entries</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-success">{{ audit_entries|selectattr('success', 'equalto', true)|list|length }}</h4>
+                            <small class="text-muted">Successful Operations</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-danger">{{ audit_entries|selectattr('success', 'equalto', false)|list|length }}</h4>
+                            <small class="text-muted">Failed Operations</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-info">{{ audit_entries|map(attribute='action')|unique|list|length }}</h4>
+                            <small class="text-muted">Unique Actions</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Breakdown -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tasks me-2"></i>Action Breakdown
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% set action_counts = {} %}
+                        {% for entry in audit_entries %}
+                            {% if entry.action not in action_counts %}
+                                {% set _ = action_counts.update({entry.action: 0}) %}
+                            {% endif %}
+                            {% set _ = action_counts.update({entry.action: action_counts[entry.action] + 1}) %}
+                        {% endfor %}
+                        
+                        {% for action, count in action_counts.items() %}
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="action-icon me-3 {% if action == 'UPLOAD' %}bg-success{% elif action == 'VERIFY' %}bg-info{% elif action == 'INVALIDATE' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                    <i class="fas fa-{% if action == 'UPLOAD' %}upload{% elif action == 'VERIFY' %}check{% elif action == 'INVALIDATE' %}ban{% else %}circle{% endif %} text-white"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ action|title }}</h6>
+                                    <small class="text-muted">{{ count }} occurrence{{ 's' if count != 1 else '' }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -35px;
+    top: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.timeline-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 30px;
+    bottom: -30px;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.action-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show a temporary success message
+        const button = event.target.closest('button');
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+        button.classList.remove('btn-outline-secondary');
+        button.classList.add('btn-success');
+        
+        setTimeout(() => {
+            button.innerHTML = originalHTML;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-secondary');
+        }, 1000);
+    });
+}
+</script>
+{% endblock %} 

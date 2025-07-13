@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Home - EHR Blockchain System{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section text-center py-5 bg-gradient-primary text-white rounded">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-4">
+            <i class="fas fa-heartbeat me-3"></i>EHR Blockchain System
+        </h1>
+        <p class="lead mb-4">Secure, decentralized electronic health records powered by blockchain technology</p>
+        <div class="d-flex justify-content-center gap-3">
+            {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('auth.login') }}" class="btn btn-light btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>Register
+                </a>
+            {% else %}
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-light btn-lg">
+                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="row mt-5">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Secure & Immutable</h5>
+                <p class="card-text">Medical records are stored on the blockchain, ensuring data integrity and preventing unauthorized modifications.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Role-Based Access</h5>
+                <p class="card-text">Different access levels for administrators, doctors, and patients with appropriate permissions.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-cloud fa-3x text-info mb-3"></i>
+                <h5 class="card-title">IPFS Integration</h5>
+                <p class="card-text">Large files and documents are stored on IPFS for decentralized and efficient storage.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works Section -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h2 class="text-center mb-4">How It Works</h2>
+    </div>
+    
+    <div class="col-md-3 text-center mb-4">
+        <div class="step-circle bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3">
+            <span class="h4 mb-0">1</span>
+        </div>
+        <h5>Registration</h5>
+        <p>Users register with their role (admin, doctor, or patient)</p>
+    </div>
+    
+    <div class="col-md-3 text-center mb-4">
+        <div class="step-circle bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3">
+            <span class="h4 mb-0">2</span>
+        </div>
+        <h5>Record Creation</h5>
+        <p>Doctors create medical records for their patients</p>
+    </div>
+    
+    <div class="col-md-3 text-center mb-4">
+        <div class="step-circle bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3">
+            <span class="h4 mb-0">3</span>
+        </div>
+        <h5>Blockchain Storage</h5>
+        <p>Records are hashed and stored on the blockchain</p>
+    </div>
+    
+    <div class="col-md-3 text-center mb-4">
+        <div class="step-circle bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3">
+            <span class="h4 mb-0">4</span>
+        </div>
+        <h5>Secure Access</h5>
+        <p>Authorized users can access records securely</p>
+    </div>
+</div>
+
+<!-- Technology Stack -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h2 class="text-center mb-4">Technology Stack</h2>
+    </div>
+    
+    <div class="col-md-2 col-6 text-center mb-3">
+        <div class="tech-item">
+            <i class="fab fa-python fa-2x text-primary mb-2"></i>
+            <p class="small">Flask</p>
+        </div>
+    </div>
+    
+    <div class="col-md-2 col-6 text-center mb-3">
+        <div class="tech-item">
+            <i class="fab fa-ethereum fa-2x text-info mb-2"></i>
+            <p class="small">Ethereum</p>
+        </div>
+    </div>
+    
+    <div class="col-md-2 col-6 text-center mb-3">
+        <div class="tech-item">
+            <i class="fas fa-database fa-2x text-success mb-2"></i>
+            <p class="small">SQLAlchemy</p>
+        </div>
+    </div>
+    
+    <div class="col-md-2 col-6 text-center mb-3">
+        <div class="tech-item">
+            <i class="fas fa-cloud fa-2x text-warning mb-2"></i>
+            <p class="small">IPFS</p>
+        </div>
+    </div>
+    
+    <div class="col-md-2 col-6 text-center mb-3">
+        <div class="tech-item">
+            <i class="fab fa-bootstrap fa-2x text-purple mb-2"></i>
+            <p class="small">Bootstrap</p>
+        </div>
+    </div>
+    
+    <div class="col-md-2 col-6 text-center mb-3">
+        <div class="tech-item">
+            <i class="fab fa-js fa-2x text-warning mb-2"></i>
+            <p class="small">JavaScript</p>
+        </div>
+    </div>
+</div>
+{% endblock %} 

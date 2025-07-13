@@ -1,0 +1,526 @@
+{% extends "base.html" %}
+
+{% block title %}File Details - EHR Blockchain System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-file-alt me-2"></i>File Details
+                </h2>
+                <div>
+                    <a href="{{ url_for('files.upload_form') }}" class="btn btn-primary me-2">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>Upload Files
+                    </a>
+                    <a href="{{ url_for('files.verify_page') }}" class="btn btn-success me-2">
+                        <i class="fas fa-shield-alt me-2"></i>Verify Files
+                    </a>
+                    <a href="{{ url_for('files.file_list') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-list me-2"></i>Back to Files
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if file_info and file_info.get('success') %}
+        <div class="row">
+            <!-- File Information -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>File Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Filename:</strong></td>
+                                        <td>{{ file_info.filename }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Record Type:</strong></td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ file_info.record_type }}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td>
+                                            {% if file_info.is_valid %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Valid
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times me-1"></i>Invalid
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Upload Time:</strong></td>
+                                        <td>
+                                            {% if file_info.upload_time %}
+                                                {{ file_info.upload_time | datetime }}
+                                            {% else %}
+                                                <span class="text-muted">Unknown</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>File Hash:</strong></td>
+                                        <td>
+                                            <code class="text-primary">{{ file_info.file_hash[:16] }}...</code>
+                                            <button class="btn btn-sm btn-outline-secondary ms-2" 
+                                                    onclick="copyToClipboard('{{ file_info.file_hash }}')"
+                                                    title="Copy full hash">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>IPFS Hash:</strong></td>
+                                        <td>
+                                            {% if file_info.ipfs_hash %}
+                                                <code class="text-info">{{ file_info.ipfs_hash[:16] }}...</code>
+                                            {% else %}
+                                                <span class="text-muted">Not available</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Verifications:</strong></td>
+                                        <td>
+                                            <span class="badge bg-info">{{ file_info.verification_count or 0 }}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Last Verified:</strong></td>
+                                        <td>
+                                            {% if file_info.last_verified %}
+                                                {{ file_info.last_verified | datetime }}
+                                            {% else %}
+                                                <span class="text-muted">Never</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Verification Actions -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shield-alt me-2"></i>Verification Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>File Verification</h6>
+                                <p class="text-muted">Upload a file to verify its integrity against the blockchain</p>
+                                <button class="btn btn-success" onclick="verifyFile('{{ file_info.file_hash }}')">
+                                    <i class="fas fa-check me-2"></i>Verify File
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Tamper Detection</h6>
+                                <p class="text-muted">Check if a file has been modified since upload</p>
+                                <button class="btn btn-warning" onclick="detectTampering('{{ file_info.file_hash }}')">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>Detect Tampering
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audit Trail -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i>Audit Trail
+                        </h5>
+                        <a href="{{ url_for('files.audit_trail', file_hash=file_info.file_hash) }}" 
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-external-link-alt me-1"></i>View Full Trail
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        {% if audit_trail and audit_trail.get('success') and audit_trail.get('audit_entries') %}
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Timestamp</th>
+                                            <th>Action</th>
+                                            <th>Actor</th>
+                                            <th>Details</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for entry in audit_trail.audit_entries[:5] %}
+                                        <tr>
+                                            <td>
+                                                <small>{{ entry.timestamp | datetime }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">{{ entry.action }}</span>
+                                            </td>
+                                            <td>
+                                                <code>{{ entry.actor[:10] }}...</code>
+                                            </td>
+                                            <td>
+                                                <small>{{ entry.details }}</small>
+                                            </td>
+                                            <td>
+                                                {% if entry.success %}
+                                                    <i class="fas fa-check text-success"></i>
+                                                {% else %}
+                                                    <i class="fas fa-times text-danger"></i>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% elif audit_trail and audit_trail.get('error') %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Error loading audit trail: {{ audit_trail.error }}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-history fa-2x text-muted mb-3"></i>
+                                <h6 class="text-muted">No audit trail available</h6>
+                                <p class="text-muted">Audit trail will be generated as actions are performed on this file.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <!-- Quick Actions -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tools me-2"></i>Quick Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('files.verify_page') }}" class="btn btn-success">
+                                <i class="fas fa-check me-2"></i>Verify File
+                            </a>
+                            <a href="{{ url_for('files.upload_form') }}" class="btn btn-primary">
+                                <i class="fas fa-upload me-2"></i>Upload New File
+                            </a>
+                            <a href="{{ url_for('files.tamper_demo') }}" class="btn btn-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Tamper Demo
+                            </a>
+                            <a href="{{ url_for('files.file_list') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-list me-2"></i>Back to Files
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Statistics -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>File Statistics
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <h4 class="text-primary">{{ file_info.verification_count or 0 }}</h4>
+                                    <small class="text-muted">Verifications</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="text-{% if file_info.is_valid %}success{% else %}danger{% endif %}">
+                                    {% if file_info.is_valid %}Valid{% else %}Invalid{% endif %}
+                                </h4>
+                                <small class="text-muted">Status</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Actions -->
+                {% if file_info.is_valid %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user-shield me-2"></i>Admin Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('files.invalidate_file', file_hash=file_info.file_hash) }}"
+                              onsubmit="return confirm('Are you sure you want to invalidate this file? This action cannot be undone.')">
+                            <button type="submit" class="btn btn-danger w-100">
+                                <i class="fas fa-ban me-2"></i>Invalidate File
+                            </button>
+                        </form>
+                        <small class="text-muted">Only admins can invalidate files</small>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <h4 class="text-warning">File Not Found</h4>
+                        <p class="text-muted">The requested file could not be found on the blockchain.</p>
+                        <a href="{{ url_for('files.file_list') }}" class="btn btn-primary">
+                            <i class="fas fa-list me-2"></i>Back to Files
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- File Verification Modal -->
+<div class="modal fade" id="verifyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-shield-alt me-2"></i>Verify File Integrity
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="verifyForm" enctype="multipart/form-data">
+                    <input type="hidden" id="verifyFileHash" name="file_hash">
+                    <div class="mb-3">
+                        <label for="verifyFile" class="form-label">Select File to Verify</label>
+                        <input type="file" class="form-control" id="verifyFile" name="file" required>
+                        <div class="form-text">
+                            Upload the file you want to verify against the blockchain
+                        </div>
+                    </div>
+                </form>
+                <div id="verifyResult" class="mt-3" style="display: none;">
+                    <div class="alert" id="verifyAlert">
+                        <div id="verifyMessage"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="submitVerification()">
+                    <i class="fas fa-check me-2"></i>Verify File
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tamper Detection Modal -->
+<div class="modal fade" id="tamperModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Detect Tampering
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="tamperForm" enctype="multipart/form-data">
+                    <input type="hidden" id="tamperFileHash" name="file_hash">
+                    <div class="mb-3">
+                        <label for="tamperFile" class="form-label">Select File to Check</label>
+                        <input type="file" class="form-control" id="tamperFile" name="file" required>
+                        <div class="form-text">
+                            Upload the file you want to check for tampering
+                        </div>
+                    </div>
+                </form>
+                <div id="tamperResult" class="mt-3" style="display: none;">
+                    <div class="alert" id="tamperAlert">
+                        <div id="tamperMessage"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning" onclick="submitTamperDetection()">
+                    <i class="fas fa-search me-2"></i>Detect Tampering
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        const button = event.target.closest('button');
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i>';
+        button.classList.remove('btn-outline-secondary');
+        button.classList.add('btn-success');
+        
+        setTimeout(() => {
+            button.innerHTML = originalHTML;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-secondary');
+        }, 1000);
+    });
+}
+
+function verifyFile(fileHash) {
+    document.getElementById('verifyFileHash').value = fileHash;
+    document.getElementById('verifyResult').style.display = 'none';
+    document.getElementById('verifyForm').reset();
+    new bootstrap.Modal(document.getElementById('verifyModal')).show();
+}
+
+function submitVerification() {
+    const formData = new FormData(document.getElementById('verifyForm'));
+    
+    fetch('{{ url_for("files.api_verify") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const resultDiv = document.getElementById('verifyResult');
+        const alertDiv = document.getElementById('verifyAlert');
+        const messageDiv = document.getElementById('verifyMessage');
+        
+        resultDiv.style.display = 'block';
+        
+        if (data.success && data.is_valid) {
+            alertDiv.className = 'alert alert-success';
+            messageDiv.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>File Verified Successfully!</strong><br>
+                The file integrity is confirmed. No tampering detected.
+            `;
+        } else if (data.success && !data.is_valid) {
+            alertDiv.className = 'alert alert-danger';
+            messageDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>File Verification Failed!</strong><br>
+                Possible tampering detected. The file hash does not match the original.
+            `;
+        } else {
+            alertDiv.className = 'alert alert-warning';
+            messageDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong>Verification Error:</strong><br>
+                ${data.error || 'Unknown error occurred'}
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        const resultDiv = document.getElementById('verifyResult');
+        const alertDiv = document.getElementById('verifyAlert');
+        const messageDiv = document.getElementById('verifyMessage');
+        
+        resultDiv.style.display = 'block';
+        alertDiv.className = 'alert alert-danger';
+        messageDiv.innerHTML = `
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <strong>Error:</strong><br>
+            Failed to verify file. Please try again.
+        `;
+    });
+}
+
+function detectTampering(fileHash) {
+    document.getElementById('tamperFileHash').value = fileHash;
+    document.getElementById('tamperResult').style.display = 'none';
+    document.getElementById('tamperForm').reset();
+    new bootstrap.Modal(document.getElementById('tamperModal')).show();
+}
+
+function submitTamperDetection() {
+    const formData = new FormData(document.getElementById('tamperForm'));
+    
+    fetch('{{ url_for("files.api_detect_tampering") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const resultDiv = document.getElementById('tamperResult');
+        const alertDiv = document.getElementById('tamperAlert');
+        const messageDiv = document.getElementById('tamperMessage');
+        
+        resultDiv.style.display = 'block';
+        
+        if (data.success) {
+            if (data.is_tampered) {
+                alertDiv.className = 'alert alert-danger';
+                messageDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Tampering Detected!</strong><br>
+                    The file has been modified since it was uploaded to the blockchain.<br>
+                    <small class="text-muted">
+                        Original Hash: ${data.original_hash}<br>
+                        Current Hash: ${data.current_hash}
+                    </small>
+                `;
+            } else {
+                alertDiv.className = 'alert alert-success';
+                messageDiv.innerHTML = `
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>No Tampering Detected</strong><br>
+                    The file appears to be unchanged since upload.
+                `;
+            }
+        } else {
+            alertDiv.className = 'alert alert-warning';
+            messageDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong>Detection Error:</strong><br>
+                ${data.error || 'Unknown error occurred'}
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        const resultDiv = document.getElementById('tamperResult');
+        const alertDiv = document.getElementById('tamperAlert');
+        const messageDiv = document.getElementById('tamperMessage');
+        
+        resultDiv.style.display = 'block';
+        alertDiv.className = 'alert alert-danger';
+        messageDiv.innerHTML = `
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <strong>Error:</strong><br>
+            Failed to detect tampering. Please try again.
+        `;
+    });
+}
+</script>
+{% endblock %} 

@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Consultation Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.patients') }}">
+                            <i class="fas fa-users"></i> Patients
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('doctor.consultations') }}">
+                            <i class="fas fa-calendar-check"></i> Consultations
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.schedule') }}">
+                            <i class="fas fa-calendar-alt"></i> Schedule
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.profile') }}">
+                            <i class="fas fa-user-md"></i> Profile
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="fas fa-calendar-check"></i> Consultation Details
+                </h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{{ url_for('doctor.consultations') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Consultations
+                    </a>
+                </div>
+            </div>
+
+            <!-- Consultation Information -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle"></i> Consultation Information
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Patient:</strong></td>
+                                    <td>{{ consultation.patient.user.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Date:</strong></td>
+                                    <td>{{ consultation.date.strftime('%Y-%m-%d') }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Time:</strong></td>
+                                    <td>{{ consultation.time.strftime('%H:%M') if consultation.time else 'Not specified' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if consultation.status == 'completed' else 'warning' if consultation.status == 'in_progress' else 'secondary' }}">
+                                            {{ consultation.status.replace('_', ' ').title() }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Type:</strong></td>
+                                    <td>{{ consultation.consultation_type or 'General' }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user"></i> Patient Information
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Name:</strong></td>
+                                    <td>{{ consultation.patient.user.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td>{{ consultation.patient.user.email }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Phone:</strong></td>
+                                    <td>{{ consultation.patient.phone or 'Not specified' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Age:</strong></td>
+                                    <td>
+                                        {% if consultation.patient.date_of_birth %}
+                                            {{ ((consultation.date - consultation.patient.date_of_birth).days / 365.25) | int }} years
+                                        {% else %}
+                                            Not specified
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Blood Type:</strong></td>
+                                    <td>{{ consultation.patient.blood_type or 'Not specified' }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Consultation Actions -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-cogs"></i> Consultation Actions
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    {% if consultation.status == 'scheduled' %}
+                                        <button class="btn btn-warning btn-lg w-100 mb-2" onclick="startConsultation({{ consultation.id }})">
+                                            <i class="fas fa-play"></i> Start Consultation
+                                        </button>
+                                    {% elif consultation.status == 'in_progress' %}
+                                        <button class="btn btn-success btn-lg w-100 mb-2" onclick="completeConsultation({{ consultation.id }})">
+                                            <i class="fas fa-check"></i> Complete Consultation
+                                        </button>
+                                    {% else %}
+                                        <button class="btn btn-secondary btn-lg w-100 mb-2" disabled>
+                                            <i class="fas fa-check-circle"></i> Consultation Completed
+                                        </button>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <a href="{{ url_for('doctor.create_record', patient_id=consultation.patient_id) }}" class="btn btn-primary btn-lg w-100 mb-2">
+                                        <i class="fas fa-plus"></i> Add Medical Record
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a href="{{ url_for('doctor.view_patient', patient_id=consultation.patient_id) }}" class="btn btn-info btn-lg w-100 mb-2">
+                                        <i class="fas fa-user"></i> View Patient
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Update Consultation Form -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-edit"></i> Update Consultation
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('doctor.update_consultation', consultation_id=consultation.id) }}">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="status" class="form-label">
+                                            <i class="fas fa-tasks"></i> Status
+                                        </label>
+                                        <select class="form-select" id="status" name="status" required>
+                                            <option value="scheduled" {{ 'selected' if consultation.status == 'scheduled' }}>Scheduled</option>
+                                            <option value="in_progress" {{ 'selected' if consultation.status == 'in_progress' }}>In Progress</option>
+                                            <option value="completed" {{ 'selected' if consultation.status == 'completed' }}>Completed</option>
+                                            <option value="cancelled" {{ 'selected' if consultation.status == 'cancelled' }}>Cancelled</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="notes" class="form-label">
+                                            <i class="fas fa-notes-medical"></i> Notes
+                                        </label>
+                                        <textarea class="form-control" id="notes" name="notes" rows="4" 
+                                                  placeholder="Enter consultation notes, observations, or recommendations...">{{ consultation.notes or '' }}</textarea>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save"></i> Update Consultation
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function startConsultation(consultationId) {
+    if (confirm('Are you sure you want to start this consultation?')) {
+        fetch(`/doctor/consultations/${consultationId}/start`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Consultation started successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while starting the consultation.');
+        });
+    }
+}
+
+function completeConsultation(consultationId) {
+    if (confirm('Are you sure you want to complete this consultation?')) {
+        fetch(`/doctor/consultations/${consultationId}/complete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Consultation completed successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while completing the consultation.');
+        });
+    }
+}
+
+// Auto-resize textarea
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.getElementById('notes');
+    if (textarea) {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+        
+        // Trigger resize on load
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+    }
+});
+</script>
+{% endblock %} 

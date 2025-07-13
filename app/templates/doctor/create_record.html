@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Create Medical Record - {{ patient.user.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.patients') }}">
+                            <i class="fas fa-users"></i> Patients
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.consultations') }}">
+                            <i class="fas fa-calendar-check"></i> Consultations
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.schedule') }}">
+                            <i class="fas fa-calendar-alt"></i> Schedule
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.profile') }}">
+                            <i class="fas fa-user-md"></i> Profile
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="fas fa-plus-circle"></i> Create Medical Record
+                </h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{{ url_for('doctor.view_patient', patient_id=patient.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Patient
+                    </a>
+                </div>
+            </div>
+
+            <!-- Patient Info Card -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user"></i> Patient Information
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Name:</strong> {{ patient.user.name }}</p>
+                                    <p><strong>Email:</strong> {{ patient.user.email }}</p>
+                                    <p><strong>Date of Birth:</strong> {{ patient.date_of_birth or 'Not specified' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Gender:</strong> {{ patient.gender or 'Not specified' }}</p>
+                                    <p><strong>Blood Type:</strong> {{ patient.blood_type or 'Not specified' }}</p>
+                                    <p><strong>Phone:</strong> {{ patient.phone or 'Not specified' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical Record Form -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-file-medical"></i> Medical Record Details
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="diagnosis" class="form-label">
+                                            <i class="fas fa-stethoscope"></i> Diagnosis *
+                                        </label>
+                                        <textarea class="form-control" id="diagnosis" name="diagnosis" rows="3" required 
+                                                  placeholder="Enter the patient's diagnosis..."></textarea>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="treatment" class="form-label">
+                                            <i class="fas fa-pills"></i> Treatment *
+                                        </label>
+                                        <textarea class="form-control" id="treatment" name="treatment" rows="3" required
+                                                  placeholder="Enter the prescribed treatment..."></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="prescription" class="form-label">
+                                            <i class="fas fa-prescription"></i> Prescription
+                                        </label>
+                                        <textarea class="form-control" id="prescription" name="prescription" rows="4"
+                                                  placeholder="Enter medication details, dosage, frequency..."></textarea>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="notes" class="form-label">
+                                            <i class="fas fa-notes-medical"></i> Additional Notes
+                                        </label>
+                                        <textarea class="form-control" id="notes" name="notes" rows="4"
+                                                  placeholder="Enter any additional notes, observations, or recommendations..."></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle"></i>
+                                            <strong>Note:</strong> This medical record will be permanently associated with the patient's file. 
+                                            Please ensure all information is accurate and complete.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between">
+                                            <a href="{{ url_for('doctor.view_patient', patient_id=patient.id) }}" class="btn btn-secondary">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </a>
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fas fa-save"></i> Save Medical Record
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-resize textareas
+document.addEventListener('DOMContentLoaded', function() {
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+});
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const diagnosis = document.getElementById('diagnosis').value.trim();
+    const treatment = document.getElementById('treatment').value.trim();
+    
+    if (!diagnosis || !treatment) {
+        e.preventDefault();
+        alert('Please fill in all required fields (Diagnosis and Treatment).');
+        return false;
+    }
+});
+</script>
+{% endblock %} 

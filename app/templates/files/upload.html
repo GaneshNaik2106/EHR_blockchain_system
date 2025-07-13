@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Upload File{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Upload File</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="file" class="form-label">Select File</label>
+                            <input type="file" class="form-control" id="file" name="file" required>
+                            <div class="form-text">Allowed file types: txt, pdf, png, jpg, jpeg, gif, doc, docx</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Upload File</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <a href="{{ url_for('files.file_list') }}" class="btn btn-secondary">View Files</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
